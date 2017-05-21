@@ -24,28 +24,35 @@ public class MeterReaderBuilder
         {
             case START_RECORD:
                 // ignoring state as file is considered to be valid
-//                System.out.println("Started Reading Meter File");
                 break;
             case END_RECORD:
-                //ignoring state as file is considered to be valid
-//                System.out.println("Finished Reading Meter File");
+                // ignoring state as file is considered to be valid
                 break;
             case START_METER_RECORD:
-                if (dataPoints[1].length() != 10)
-                {
-                    throw new MeterReadException("Meter Id " + dataPoints[1] + " is not of valid length");
-                }
-                currentMeterRead = new MeterRead(dataPoints[1], EnergyUnit.valueOf(dataPoints[2]));
+                validateMeterId(dataPoints);
+                currentMeterRead = createMeterReader(dataPoints);
                 meterReadList.add(currentMeterRead);
                 break;
             case METER_READ_RECORD:
-                LocalDate localDate = LocalDate.parse(dataPoints[1], formatter);
-                currentMeterRead.appendVolume(localDate,
+                currentMeterRead.appendVolume(LocalDate.parse(dataPoints[1], formatter),
                         new MeterVolume(BigDecimal.valueOf(Double.valueOf(dataPoints[2])), Quality.valueOf(dataPoints[3])));
                 break;
-                
-             default :
-                 throw new MeterReadException("Invalid Data in Meter Reader File");
+
+            default:
+                throw new MeterReadException("Invalid Data in Meter Reader File");
+        }
+    }
+
+    private MeterRead createMeterReader(String[] dataPoints)
+    {
+        return new MeterRead(dataPoints[1], EnergyUnit.valueOf(dataPoints[2]));
+    }
+
+    private void validateMeterId(String[] dataPoints) throws MeterReadException
+    {
+        if (dataPoints[1].length() != 10)
+        {
+            throw new MeterReadException("Meter Id " + dataPoints[1] + " is not of valid length");
         }
     }
 
